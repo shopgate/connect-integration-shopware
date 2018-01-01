@@ -21,33 +21,38 @@
  */
 
 use Shopgate\CloudIntegrationSdk as ShopgateSdk;
+use Shopware\Components\CSRFWhitelistAware;
 
-class Shopware_Controllers_Frontend_Shopgate extends Enlight_Controller_Action
+class Shopware_Controllers_Frontend_Shopgate extends Enlight_Controller_Action implements CSRFWhitelistAware
 {
-
-    public function indexAction()
+    /**
+     * Returns a list with actions which should not be validated for CSRF protection
+     *
+     * @return string[]
+     */
+    public function getWhitelistedCSRFActions()
     {
-        $this->View()->setTemplate();
-        die('hello');
+        return ['v2'];
     }
 
-    private $sgConfig;
-
-    public function cartsAction()
+    /**
+     * Main entry point
+     */
+    public function v2Action()
     {
         $this->View()->setTemplate();
         try {
             /** @var \ShopgateCloudApi\Components\ClientCredentials $credentials */
             $credentials = $this->container->get('shopgate_cloudapi.client_credentials');
+            $token       = $this->container->get('shopgate_cloudapi.repo_sdk_token');
+            $user        = $this->container->get('shopgate_cloudapi.repo_sdk_user');
         } catch (\Exception $exception) {
-            //todo-sg: throw API exception
+            $this->response->renderExceptions(true);
+            $this->response->setException($exception)->sendResponse();
+            exit;
         }
 
-        $db = $this->getModelManager()->getConnection();
-        /** @var \ShopgateCloudApi\Repositories\Sdk\Token $token */
-        $token = $this->container->get('shopgate_cloudapi.repo_sdk_token');
-
-        $tokenType = new ShopgateSdk\ValueObject\TokenType\AccessToken();
+        /*$tokenType = new ShopgateSdk\ValueObject\TokenType\AccessToken();
         $tokenId   = $token->generateTokenId($tokenType);
         $saveToken = new ShopgateSdk\ValueObject\Token(
             $tokenType,
@@ -57,8 +62,17 @@ class Shopware_Controllers_Frontend_Shopgate extends Enlight_Controller_Action
             new ShopgateSdk\ValueObject\Base\BaseString(date('Y-m-d H:i:s'))
         );
         $token->saveToken($saveToken);
-        $loadedToken = $token->loadToken($tokenId, $tokenType);
-        $r           = new ShopgateSdk\Service\Router\Router($credentials, $token);
+        $loadedToken = $token->loadToken($tokenId, $tokenType);*/
+        $path = new \ShopgateCloudApi\Components\Path();
+        try {
+            $r        = new ShopgateSdk\Service\Router\Router($credentials, $token, $user, $path);
+            $response = $r->dispatch($this->getSdkRequest());
+            $this->sendResponse($response);
+        } catch (Exception $e) {
+            $this->response->renderExceptions(true);
+            $this->response->setException($e)->sendResponse();
+            exit;
+        }
 
         // bind "POST /carts" to "MageCreateCartHandler" handler class
         //        try {
@@ -94,17 +108,42 @@ class Shopware_Controllers_Frontend_Shopgate extends Enlight_Controller_Action
         //		));
     }
 
-    public function preDispatch()
+    /**
+     * Translates the system's request to Shopgate SDKs
+     *
+     * @return ShopgateSdk\ValueObject\Request\Request
+     * @throws Exception
+     */
+    private function getSdkRequest()
     {
-        // load shopgate config
-        $this->sgConfig['client_id']     = '1234';
-        $this->sgConfig['client_secret'] = 'abcd4321';
+        $uri         = $this->request->getRequestUri();
+        $method      = $this->request->getMethod();
+        $headers     = [];
+        $headerTypes = ['Content-Type', 'Accept', 'Authorization'];
+        foreach ($headerTypes as $headerType) {
+            /** @noinspection PhpUnhandledExceptionInspection */
+            $header = $this->request->getHeader($headerType);
+            if (!empty($header)) {
+                $headers[$headerType] = $header;
+            }
+        }
 
-        // more init stuff
+        return new ShopgateSdk\ValueObject\Request\Request($uri, $method, $headers, $this->request->getRawBody());
     }
 
-    public function postDispatch()
+    /**
+     * Translates Shopgate SDK response to the system's
+     *
+     * @param ShopgateSdk\ValueObject\Response $response
+     */
+    private function sendResponse(ShopgateSdk\ValueObject\Response $response)
     {
-        // cleanup stuff
+        $this->response->setBody($response->getBody());
+        foreach ($response->getHeaders() as $key => $header) {
+            $this->response->setHeader($key, $header);
+        }
+        $this->response->setHttpResponseCode($response->getCode());
+        $this->response->sendResponse();
+        exit();
     }
 }

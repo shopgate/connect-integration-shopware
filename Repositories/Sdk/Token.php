@@ -30,16 +30,19 @@ use Shopgate\CloudIntegrationSdk\ValueObject\TokenType\AbstractTokenType;
 use Shopgate\CloudIntegrationSdk\ValueObject\UserId;
 use ShopgateCloudApi\Models\Auth\AccessToken;
 use ShopgateCloudApi\Models\Auth\RefreshToken;
-use Symfony\Component\Validator\Constraints\DateTime;
+use Shopware\Components\Model\ModelManager;
 
 class Token extends AbstractToken
 {
+    /** @var ModelManager */
+    private $modelManager;
 
-    private $db;
-
-    public function __construct(\Doctrine\DBAL\Connection $db)
+    /**
+     * @param ModelManager $modelManager
+     */
+    public function __construct(ModelManager $modelManager)
     {
-        $this->db = $db;
+        $this->modelManager = $modelManager;
     }
 
     /**
@@ -65,7 +68,7 @@ class Token extends AbstractToken
             }
         }
         if (function_exists('mcrypt_create_iv')) {
-            $randomData = mcrypt_create_iv(20, MCRYPT_DEV_URANDOM);
+            $randomData = mcrypt_create_iv(MCRYPT_DEV_URANDOM, 20);
             if ($randomData !== false && strlen($randomData) === 20) {
                 return new TokenId(bin2hex($randomData));
             }
@@ -76,11 +79,8 @@ class Token extends AbstractToken
                 return new TokenId(bin2hex($randomData));
             }
         }
-        // Last resort which you probably should just get rid of:
-        /** @noinspection SuspiciousAssignmentsInspection */
-        $randomData = mt_rand() . mt_rand() . mt_rand() . mt_rand() . microtime(true) . uniqid(mt_rand(), true);
 
-        $hash = substr(hash('sha512', $randomData), 0, 40);
+        $hash = substr(hash('sha512', mt_rand(40, 100)), 0, 40);
 
         return new TokenId($hash);
     }
@@ -96,12 +96,9 @@ class Token extends AbstractToken
      */
     public function loadToken(TokenId $token, AbstractTokenType $type)
     {
-        //$builder = $this->container->get('models')->createQueryBuilder();
-        $class   =
-            $type->getValue() === AbstractTokenType::ACCESS_TOKEN ? AccessToken::class
-                : RefreshToken::class;
+        $class = $type->getValue() === AbstractTokenType::ACCESS_TOKEN ? AccessToken::class : RefreshToken::class;
         /** @var \Shopware\Components\Model\QueryBuilder $builder */
-        $builder = Shopware()->Container()->get('models')->createQueryBuilder();
+        $builder = $this->modelManager->createQueryBuilder();
         $builder->select('access_token_db')
                 ->from($class, 'access_token_db')
                 ->where('access_token_db.accessToken = :accessToken')
@@ -109,6 +106,11 @@ class Token extends AbstractToken
 
         /** @var AccessToken $returned */
         $returned = $builder->getQuery()->getSingleResult();
+
+        if (!$returned->getAccessToken()) {
+            return null;
+        }
+
         $tokenId  = new TokenId($returned->getAccessToken());
         $clientId = new ClientId($returned->getClientId());
         $userId   = new UserId($returned->getUserId());
@@ -130,7 +132,7 @@ class Token extends AbstractToken
      */
     public function loadTokenByUserId($userId, AbstractTokenType $type)
     {
-        // TODO: Implement loadTokenByUserId() method.
+        // todo-sg: Implement loadTokenByUserId() method.
     }
 
     /**
@@ -144,19 +146,28 @@ class Token extends AbstractToken
     {
         if ($tokenData->getType()->getValue() === AbstractTokenType::ACCESS_TOKEN) {
             $token = new AccessToken();
+            $token->setAccessToken($tokenData->getTokenId()->getValue()); //todo-sg: refactor Doctrine to setToken()
         } else {
             $token = new RefreshToken();
+            $token->setRefreshToken($tokenData->getTokenId()->getValue());
         }
-        $token->setAccessToken($tokenData->getTokenId()->getValue());
-        $token->setClientId($tokenData->getClientId()->getValue());
-        $token->setExpires($tokenData->getExpires()->getValue());
-        $token->setUserId($tokenData->getUserId()->getValue()); //todo-sg: library problems
-//        $token->setScope($tokenData->getScope()->getValue());
 
-        $modelManager = Shopware()->Container()->get('models');
+        $token->setClientId($tokenData->getClientId()->getValue());
+        if ($tokenData->getExpires()) {
+            $token->setExpires($tokenData->getExpires()->getValue());
+        }
+
+        if ($tokenData->getUserId()) {
+            $token->setUserId($tokenData->getUserId()->getValue()); //todo-sg: library problems?
+        }
+
+        if ($tokenData->getScope()) {
+            $token->setScope($tokenData->getScope()->getValue());
+        }
+
         /** @var \Shopware\Components\Model\QueryBuilder $builder */
-        $modelManager->persist($token);
-        $modelManager->flush($token);
-        $modelManager->refresh($token);
+        $this->modelManager->persist($token);
+        $this->modelManager->flush($token);
+        $this->modelManager->refresh($token);
     }
 }

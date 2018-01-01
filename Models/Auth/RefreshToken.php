@@ -22,8 +22,8 @@
 
 namespace ShopgateCloudApi\Models\Auth;
 
-use Shopware\Components\Model\ModelEntity,
-    Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
+use Shopware\Components\Model\ModelEntity;
 
 /**
  * @ORM\Entity(repositoryClass="ShopgateCloudApi\Repositories\Auth\RefreshToken")
@@ -95,5 +95,45 @@ class RefreshToken extends ModelEntity
     public function getScope()
     {
         return $this->scope;
+    }
+
+    /**
+     * @param string $refreshToken
+     */
+    public function setRefreshToken($refreshToken)
+    {
+        $this->refreshToken = $refreshToken;
+    }
+
+    /**
+     * @param string $clientId
+     */
+    public function setClientId($clientId)
+    {
+        $this->clientId = $clientId;
+    }
+
+    /**
+     * @param string $userId
+     */
+    public function setUserId($userId)
+    {
+        $this->userId = $userId;
+    }
+
+    /**
+     * @param string $expires
+     */
+    public function setExpires($expires)
+    {
+        $this->expires = $expires;
+    }
+
+    /**
+     * @param string $scope
+     */
+    public function setScope($scope)
+    {
+        $this->scope = $scope;
     }
 }

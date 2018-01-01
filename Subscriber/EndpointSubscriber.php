@@ -28,6 +28,19 @@ use ShopgateCloudApi\ShopgateCloudApi;
 class EndpointSubscriber implements SubscriberInterface
 {
 
+    /** @var \Enlight_Loader */
+    private $loader;
+
+    /**
+     * EndpointSubscriber constructor.
+     *
+     * @param \Enlight_Loader $loader
+     */
+    public function __construct(\Enlight_Loader $loader)
+    {
+        $this->loader = $loader;
+    }
+
     /**
      * @inheritdoc
      */
@@ -41,11 +54,9 @@ class EndpointSubscriber implements SubscriberInterface
     /**
      * Load significant methods
      *
-     * @param \Enlight_Event_EventArgs $args
-     *
      * @throws \Exception
      */
-    public function onRegisterSubscriber(\Enlight_Event_EventArgs $args)
+    public function onRegisterSubscriber()
     {
         $this->registerNamespaces();
     }
@@ -57,11 +68,11 @@ class EndpointSubscriber implements SubscriberInterface
      */
     private function registerNamespaces()
     {
-        Shopware()->Container()->get('Loader')->registerNamespace(
+        $this->loader->registerNamespace(
             'ShopgateCloudApi',
             $this->getPath()
         );
-        Shopware()->Container()->get('Loader')->registerNamespace(
+        $this->loader->registerNamespace(
             'Shopgate\CloudIntegrationSdk',
             $this->getPath() . 'vendor/shopgate/cloud-integration-sdk/src/'
         );
