@@ -13,6 +13,7 @@
         </service>
         <service id="shopgate_cloudapi.repo_sdk_user" class="ShopgateCloudApi\Repositories\Sdk\User">
             <argument type="service" id="models"/>
+            <argument type="service" id="PasswordEncoder"/>
         </service>
         <service id="shopgate_cloudapi.endpoint_subscriber" class="ShopgateCloudApi\Subscriber\EndpointSubscriber">
             <argument type="service" id="loader"/>

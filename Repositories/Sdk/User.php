@@ -27,18 +27,25 @@ use Shopgate\CloudIntegrationSdk\ValueObject\Password;
 use Shopgate\CloudIntegrationSdk\ValueObject\UserId;
 use Shopgate\CloudIntegrationSdk\ValueObject\Username;
 use Shopware\Components\Model\ModelManager;
+use Shopware\Components\Password\Manager as PasswordManager;
+use Shopware\Models\Customer\Customer;
 
 class User extends AbstractUser
 {
 
-    /**
-     * @var ModelManager
-     */
+    /** @var ModelManager */
     private $modelManager;
+    /** @var PasswordManager */
+    private $passwordManager;
 
-    public function __construct(ModelManager $modelManager)
+    /**
+     * @param ModelManager    $modelManager
+     * @param PasswordManager $passwordManager
+     */
+    public function __construct(ModelManager $modelManager, PasswordManager $passwordManager)
     {
-        $this->modelManager = $modelManager;
+        $this->modelManager    = $modelManager;
+        $this->passwordManager = $passwordManager;
     }
 
     /**
@@ -51,14 +58,25 @@ class User extends AbstractUser
      */
     public function getUserIdByCredentials(Username $login, Password $password)
     {
-        /** @var \Shopware\Models\User\Repository $repo */
-        $repo = $this->modelManager->getRepository(\Shopware\Models\User\User::class);
+        /** @var \Shopware\Models\Customer\Repository $repo */
+        $repo = $this->modelManager->getRepository(Customer::class);
 
-        //todo-sg: possible website filter needed?
-        /** @var \Shopware\Models\User\User $user */
-        $user = $repo->getUsersQuery(['email' => $login->getValue(), 'password' => $password->getValue()])
-                     ->getSingleResult();
+        //todo-sg: Shop ID filter needed!
+        /** @var \Shopware\Models\Customer\Customer $user */
+        $user = $repo->getValidateEmailQueryBuilder((string) $login->getValue())->getQuery()->getOneOrNullResult();
 
-        return $user ? new UserId($user->getId()) : null;
+        if (!$user) {
+            return null;
+        }
+
+        if (!$this->passwordManager->isPasswordValid(
+            (string) $password,
+            $user->getPassword(),
+            $user->getEncoderName()
+        )) {
+            return null;
+        }
+
+        return new UserId($user->getId());
     }
 }

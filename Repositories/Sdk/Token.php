@@ -90,25 +90,17 @@ class Token extends AbstractToken
     {
         $returned = $this->getTokenByParameters(['token' => $token->getValue()], $type->getValue());
 
-        if (!$returned->getToken()) {
-            return null;
-        }
-
-        return $this->translator->getToken($returned, $type);
+        return null === $returned ? null : $this->translator->getToken($returned, $type);
     }
 
     /**
      * @inheritdoc
      */
-    public function loadTokenByUserId($userId, AbstractTokenType $type)
+    public function loadTokenByUserId(ValueObject\UserId $userId, AbstractTokenType $type)
     {
-        $returned = $this->getTokenByParameters(['user_id' => $userId], $type->getValue());
+        $returned = $this->getTokenByParameters(['userId' => (string) $userId], $type->getValue());
 
-        if (!$returned->getToken()) {
-            return null;
-        }
-
-        return $this->translator->getToken($returned, $type);
+        return null === $returned ? null : $this->translator->getToken($returned, $type);
     }
 
     /**
@@ -147,7 +139,6 @@ class Token extends AbstractToken
      *
      * @return AccessToken | RefreshToken
      * @throws \InvalidArgumentException
-     * @throws \Doctrine\ORM\NoResultException
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
     public function getTokenByParameters(array $params = array(), $type = AbstractTokenType::ACCESS_TOKEN)
@@ -165,6 +156,6 @@ class Token extends AbstractToken
                 ->where($and)
                 ->setParameters($params);
 
-        return $builder->getQuery()->getSingleResult();
+        return $builder->getQuery()->getOneOrNullResult();
     }
 }
