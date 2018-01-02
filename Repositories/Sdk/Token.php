@@ -111,22 +111,41 @@ class Token extends AbstractToken
         $token = $tokenData->getType()->getValue() === AbstractTokenType::ACCESS_TOKEN
             ? new AccessToken()
             : new RefreshToken();
-        $token->setToken($tokenData->getTokenId()->getValue());
-        $token->setClientId($tokenData->getClientId()->getValue());
-        if ($tokenData->getExpires()) {
-            $token->setExpires($tokenData->getExpires()->getValue());
-        }
 
-        if ($tokenData->getUserId()) {
-            $token->setUserId($tokenData->getUserId()->getValue()); //todo-sg: library problems?
-        }
+        /** @var AccessToken | RefreshToken $loadedToken */
+        $loadedToken = $this->modelManager->find(get_class($token), (string) $tokenData->getTokenId());
+        if ($loadedToken) {
+            $this->updateToken($loadedToken, $tokenData);
 
-        if ($tokenData->getScope()) {
-            $token->setScope($tokenData->getScope()->getValue());
+            return;
         }
+        //todo-sg: move to translator
+        $token->setToken((string) $tokenData->getTokenId());
+        $token->setClientId((string) $tokenData->getClientId());
+        $token->setExpires((string) $tokenData->getExpires());
+        $token->setUserId((string) $tokenData->getUserId());
+        $token->setScope((string) $tokenData->getScope());
 
-        /** @var \Shopware\Components\Model\QueryBuilder $builder */
         $this->modelManager->persist($token);
+        $this->modelManager->flush($token);
+        $this->modelManager->refresh($token);
+    }
+
+    /**
+     * @param AccessToken | RefreshToken $token
+     * @param ValueObject\Token          $tokenData
+     *
+     * @throws \Doctrine\ORM\ORMInvalidArgumentException
+     * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    public function updateToken($token, ValueObject\Token $tokenData)
+    {
+        //todo-sg: move to translator
+        $token->setClientId((string) $tokenData->getClientId());
+        $token->setExpires((string) $tokenData->getExpires());
+        $token->setUserId((string) $tokenData->getUserId());
+        $token->setScope((string) $tokenData->getScope());
+
         $this->modelManager->flush($token);
         $this->modelManager->refresh($token);
     }
