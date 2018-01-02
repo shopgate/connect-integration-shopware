@@ -23,123 +23,103 @@
 namespace ShopgateCloudApi\Repositories\Sdk;
 
 use Shopgate\CloudIntegrationSdk\Repository\AbstractToken;
-use Shopgate\CloudIntegrationSdk\ValueObject\TokenId;
+use Shopgate\CloudIntegrationSdk\ValueObject;
 use Shopgate\CloudIntegrationSdk\ValueObject\TokenType\AbstractTokenType;
-use Shopgate\CloudIntegrationSdk\ValueObject\UserId;
 use ShopgateCloudApi\Models\Auth\AccessToken;
 use ShopgateCloudApi\Models\Auth\RefreshToken;
 use Shopware\Components\Model\ModelManager;
 
 class Token extends AbstractToken
 {
+    /** @var \ShopgateCloudApi\Components\Translators\Sdk */
+    protected $translator;
     /** @var ModelManager */
     private $modelManager;
 
     /**
      * @param ModelManager $modelManager
+     *
+     * @throws \Exception
      */
     public function __construct(ModelManager $modelManager)
     {
         $this->modelManager = $modelManager;
+        //todo-sg: inject container class
+        $this->translator = Shopware()->Container()->get('shopgate_cloudapi.translator_sdk');
     }
 
     /**
-     * Generates a TokenId of the given type that is unique for the system, where it's created in
-     *
-     * @param AbstractTokenType $type
-     *
-     * @return TokenId
-     * @throws \InvalidArgumentException
+     * @inheritdoc
      */
     public function generateTokenId(AbstractTokenType $type)
     {
         if (function_exists('random_bytes')) {
             $randomData = random_bytes(20);
             if ($randomData !== false && strlen($randomData) === 20) {
-                return new TokenId(bin2hex($randomData));
+                return new ValueObject\TokenId(bin2hex($randomData));
             }
         }
         if (function_exists('openssl_random_pseudo_bytes')) {
             $randomData = openssl_random_pseudo_bytes(20, $strong);
             if ($randomData !== false && false === $strong && strlen($randomData) === 20) {
-                return new TokenId(bin2hex($randomData));
+                return new ValueObject\TokenId(bin2hex($randomData));
             }
         }
         if (function_exists('mcrypt_create_iv')) {
             $randomData = mcrypt_create_iv(MCRYPT_DEV_URANDOM, 20);
             if ($randomData !== false && strlen($randomData) === 20) {
-                return new TokenId(bin2hex($randomData));
+                return new ValueObject\TokenId(bin2hex($randomData));
             }
         }
         if (@file_exists('/dev/urandom')) { // Get 100 bytes of random data
             $randomData = file_get_contents('/dev/urandom', false, null, 0, 20);
             if ($randomData !== false && strlen($randomData) === 20) {
-                return new TokenId(bin2hex($randomData));
+                return new ValueObject\TokenId(bin2hex($randomData));
             }
         }
 
         $hash = substr(hash('sha512', mt_rand(40, 100)), 0, 40);
 
-        return new TokenId($hash);
+        return new ValueObject\TokenId($hash);
     }
 
     /**
-     * @param TokenId           $token
-     * @param AbstractTokenType $type
-     *
-     * @return \Shopgate\CloudIntegrationSdk\ValueObject\Token | null Returns null only if there was no Token found or
-     *                                                         it's expired
-     *
-     * @throws \Exception Throws a custom exception if trying to load the token fails for some reason
+     * @inheritdoc
      */
-    public function loadToken(TokenId $token, AbstractTokenType $type)
+    public function loadToken(ValueObject\TokenId $token, AbstractTokenType $type)
     {
-        //@todo-sg: adjust naming in Doctrine
-        $returned = $this->getTokenByParameters(['accessToken' => $token->getValue()], $type->getValue());
+        $returned = $this->getTokenByParameters(['token' => $token->getValue()], $type->getValue());
 
-        //@todo-sg: adjust naming in Doctrine
-        if (!$returned->getAccessToken()) {
+        if (!$returned->getToken()) {
             return null;
         }
 
-        //todo-sg: inject container class
-        /** @var \ShopgateCloudApi\Components\Translators\Sdk $sdk */
-        $sdk = Shopware()->Container()->get('shopgate_cloudapi.translator_sdk');
-
-        return $sdk->getToken($returned, $type);
+        return $this->translator->getToken($returned, $type);
     }
 
     /**
-     * @param UserId            $userId
-     * @param AbstractTokenType $type
-     *
-     * @return \Shopgate\CloudIntegrationSdk\ValueObject\Token | null Returns null only if there was no Token found for
-     *                                                         the given UserId
-     *
-     * @throws \Exception Throws a custom exception if trying to load the token fails for some reason
+     * @inheritdoc
      */
     public function loadTokenByUserId($userId, AbstractTokenType $type)
     {
-        // todo-sg: Implement loadTokenByUserId() method.
+        $returned = $this->getTokenByParameters(['user_id' => $userId], $type->getValue());
+
+        if (!$returned->getToken()) {
+            return null;
+        }
+
+        return $this->translator->getToken($returned, $type);
     }
 
     /**
-     * Creates a new token in the data source or overwrites it, if the TokenId already exists
-     *
-     * @param \Shopgate\CloudIntegrationSdk\ValueObject\Token $tokenData
-     *
-     * @throws \Exception
+     * @inheritdoc
      */
-    public function saveToken(\Shopgate\CloudIntegrationSdk\ValueObject\Token $tokenData)
+    public function saveToken(ValueObject\Token $tokenData)
     {
-        if ($tokenData->getType()->getValue() === AbstractTokenType::ACCESS_TOKEN) {
-            $token = new AccessToken();
-            $token->setAccessToken($tokenData->getTokenId()->getValue()); //todo-sg: refactor Doctrine to setToken()
-        } else {
-            $token = new RefreshToken();
-            $token->setRefreshToken($tokenData->getTokenId()->getValue());
-        }
-
+        $token = $tokenData->getType()->getValue() === AbstractTokenType::ACCESS_TOKEN
+            ? new AccessToken()
+            : new RefreshToken();
+        $token->setToken($tokenData->getTokenId()->getValue());
         $token->setClientId($tokenData->getClientId()->getValue());
         if ($tokenData->getExpires()) {
             $token->setExpires($tokenData->getExpires()->getValue());

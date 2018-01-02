@@ -22,8 +22,8 @@
 
 namespace ShopgateCloudApi\Models\Auth;
 
-use Shopware\Components\Model\ModelEntity,
-    Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
+use Shopware\Components\Model\ModelEntity;
 
 /**
  * @ORM\Entity(repositoryClass="ShopgateCloudApi\Repositories\Auth\Client")
@@ -33,32 +33,32 @@ class Client extends ModelEntity
 {
     /**
      * @ORM\Id()
-     * @ORM\Column(type="string", length=80, nullable=false)
+     * @ORM\Column(name="client_id", type="string", length=80, nullable=false)
      */
     public $clientId;
 
     /**
-     * @ORM\Column(type="string", length=80, nullable=true)
+     * @ORM\Column(name="client_secret", type="string", length=80, nullable=true)
      */
     public $clientSecret;
 
     /**
-     * @ORM\Column(type="string", length=2000, nullable=true)
+     * @ORM\Column(name="redirect_uri", type="string", length=2000, nullable=true)
      */
     public $redirectUri;
 
     /**
-     * @ORM\Column(type="string", length=80, nullable=true)
+     * @ORM\Column(name="grant_types", type="string", length=80, nullable=true)
      */
     public $grantTypes;
 
     /**
-     * @ORM\Column(type="string", length=4000, nullable=true)
+     * @ORM\Column(name="scope", type="string", length=4000, nullable=true)
      */
     public $scope;
 
     /**
-     * @ORM\Column(type="string", length=80, nullable=true)
+     * @ORM\Column(name="user_id", type="string", length=80, nullable=true)
      */
     public $userId;
 
@@ -108,5 +108,53 @@ class Client extends ModelEntity
     public function getUserId()
     {
         return $this->userId;
+    }
+
+    /**
+     * @param string $clientId
+     */
+    public function setClientId($clientId)
+    {
+        $this->clientId = $clientId;
+    }
+
+    /**
+     * @param string $clientSecret
+     */
+    public function setClientSecret($clientSecret)
+    {
+        $this->clientSecret = $clientSecret;
+    }
+
+    /**
+     * @param string $redirectUri
+     */
+    public function setRedirectUri($redirectUri)
+    {
+        $this->redirectUri = $redirectUri;
+    }
+
+    /**
+     * @param string $grantTypes
+     */
+    public function setGrantTypes($grantTypes)
+    {
+        $this->grantTypes = $grantTypes;
+    }
+
+    /**
+     * @param string $scope
+     */
+    public function setScope($scope)
+    {
+        $this->scope = $scope;
+    }
+
+    /**
+     * @param string $userId
+     */
+    public function setUserId($userId)
+    {
+        $this->userId = $userId;
     }
 }

@@ -22,9 +22,8 @@
 
 namespace ShopgateCloudApi\Models\Auth;
 
-
-use Shopware\Components\Model\ModelEntity,
-    Doctrine\ORM\Mapping AS ORM;
+use Doctrine\ORM\Mapping as ORM;
+use Shopware\Components\Model\ModelEntity;
 
 /**
  * @ORM\Entity(repositoryClass="ShopgateCloudApi\Repositories\Auth\AccessToken")
@@ -34,36 +33,36 @@ class AccessToken extends ModelEntity
 {
     /**
      * @ORM\Id()
-     * @ORM\Column(type="string", length=40, nullable=false)
+     * @ORM\Column(name="token", type="string", length=40, nullable=false)
      */
-    public $accessToken;
+    public $token;
 
     /**
-     * @ORM\Column(type="string", length=80, nullable=false)
+     * @ORM\Column(name="client_id", type="string", length=80, nullable=false)
      */
     public $clientId;
 
     /**
-     * @ORM\Column(type="string", length=80, nullable=true)
+     * @ORM\Column(name="user_id", type="string", length=80, nullable=true)
      */
     public $userId;
 
     /**
-     * @ORM\Column(type="datetime", nullable=false)
+     * @ORM\Column(name="expires", type="datetime", nullable=false)
      */
     public $expires;
 
     /**
-     * @ORM\Column(type="string", length=4000, nullable=true)
+     * @ORM\Column(name="scope", type="string", length=4000, nullable=true)
      */
     public $scope;
 
     /**
      * @return string
      */
-    public function getAccessToken()
+    public function getToken()
     {
-        return $this->accessToken;
+        return $this->token;
     }
 
     /**
@@ -99,11 +98,11 @@ class AccessToken extends ModelEntity
     }
 
     /**
-     * @param mixed $accessToken
+     * @param mixed $token
      */
-    public function setAccessToken($accessToken)
+    public function setToken($token)
     {
-        $this->accessToken = $accessToken;
+        $this->token = $token;
     }
 
     /**

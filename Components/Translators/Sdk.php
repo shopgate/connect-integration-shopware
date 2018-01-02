@@ -24,7 +24,6 @@ namespace ShopgateCloudApi\Components\Translators;
 
 use Shopgate\CloudIntegrationSdk as ShopgateSdk;
 use Shopgate\CloudIntegrationSdk\ValueObject;
-use Shopgate\CloudIntegrationSdk\ValueObject\TokenType\AbstractTokenType;
 use ShopgateCloudApi\Models\Auth\AccessToken;
 use ShopgateCloudApi\Models\Auth\RefreshToken;
 
@@ -42,7 +41,7 @@ class Sdk
      *
      * @param \Enlight_Controller_Request_Request $request
      *
-     * @return ShopgateSdk\ValueObject\Request\Request
+     * @return ValueObject\Request\Request
      * @throws \Exception
      */
     public function getRequest(\Enlight_Controller_Request_Request $request)
@@ -57,24 +56,21 @@ class Sdk
             }
         }
 
-        return new ShopgateSdk\ValueObject\Request\Request($uri, $method, $headers, $request->getRawBody());
+        return new ValueObject\Request\Request($uri, $method, $headers, $request->getRawBody());
     }
 
     /**
      * Translate Shopware token into SDK token
      *
-     * @param AccessToken | RefreshToken $token
-     * @param AbstractTokenType          $type
+     * @param AccessToken | RefreshToken              $token
+     * @param ValueObject\TokenType\AbstractTokenType $type
      *
      * @return ShopgateSdk\ValueObject\Token
      * @throws \InvalidArgumentException
      */
-    public function getToken($token, AbstractTokenType $type)
+    public function getToken($token, ValueObject\TokenType\AbstractTokenType $type)
     {
-        $value    = $type->getValue() === AbstractTokenType::ACCESS_TOKEN
-            ? $token->getAccessToken()
-            : $token->getRefreshToken();
-        $tokenId  = new ValueObject\TokenId($value);
+        $tokenId  = new ValueObject\TokenId($token->getToken());
         $clientId = new ValueObject\ClientId($token->getClientId());
         $userId   = new ValueObject\UserId($token->getUserId());
         /** @var \DateTime $dateTime */

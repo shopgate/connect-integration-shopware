@@ -33,36 +33,36 @@ class RefreshToken extends ModelEntity
 {
     /**
      * @ORM\Id()
-     * @ORM\Column(type="string", length=40, nullable=false)
+     * @ORM\Column(name="token", type="string", length=40, nullable=false)
      */
-    public $refreshToken;
+    public $token;
 
     /**
-     * @ORM\Column(type="string", length=80, nullable=false)
+     * @ORM\Column(name="client_id", type="string", length=80, nullable=false)
      */
     public $clientId;
 
     /**
-     * @ORM\Column(type="string", length=80, nullable=true)
+     * @ORM\Column(name="user_id", type="string", length=80, nullable=true)
      */
     public $userId;
 
     /**
-     * @ORM\Column(type="datetime", nullable=false)
+     * @ORM\Column(name="expires", type="datetime", nullable=false)
      */
     public $expires;
 
     /**
-     * @ORM\Column(type="string", length=4000, nullable=true)
+     * @ORM\Column(name="scope", type="string", length=4000, nullable=true)
      */
     public $scope;
 
     /**
      * @return string
      */
-    public function getRefreshToken()
+    public function getToken()
     {
-        return $this->refreshToken;
+        return $this->token;
     }
 
     /**
@@ -98,11 +98,11 @@ class RefreshToken extends ModelEntity
     }
 
     /**
-     * @param string $refreshToken
+     * @param string $token
      */
-    public function setRefreshToken($refreshToken)
+    public function setToken($token)
     {
-        $this->refreshToken = $refreshToken;
+        $this->token = $token;
     }
 
     /**
