@@ -34,6 +34,7 @@ class Path extends AbstractPathInfo
      */
     public function getSpecificationPath()
     {
+        //@todo-sg: not sure what this is for
         return 'specification path';
     }
 }

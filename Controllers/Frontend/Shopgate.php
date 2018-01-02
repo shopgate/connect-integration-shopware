@@ -42,10 +42,14 @@ class Shopware_Controllers_Frontend_Shopgate extends Enlight_Controller_Action i
     {
         $this->View()->setTemplate();
         try {
-            /** @var \ShopgateCloudApi\Components\ClientCredentials $credentials */
-            $credentials = $this->container->get('shopgate_cloudapi.client_credentials');
-            $token       = $this->container->get('shopgate_cloudapi.repo_sdk_token');
-            $user        = $this->container->get('shopgate_cloudapi.repo_sdk_user');
+            /** @var ShopgateCloudApi\Components\ClientCredentials $credentials */
+            /** @var ShopgateCloudApi\Components\Translators\Sdk $sdkTranslator */
+            /** @var ShopgateCloudApi\Components\Translators\Shopware $shopwareTranslator */
+            $credentials        = $this->container->get('shopgate_cloudapi.client_credentials');
+            $token              = $this->container->get('shopgate_cloudapi.repo_sdk_token');
+            $user               = $this->container->get('shopgate_cloudapi.repo_sdk_user');
+            $sdkTranslator      = $this->container->get('shopgate_cloudapi.translator_sdk');
+            $shopwareTranslator = $this->container->get('shopgate_cloudapi.translator_shopware');
         } catch (\Exception $exception) {
             $this->response->renderExceptions(true);
             $this->response->setException($exception)->sendResponse();
@@ -65,18 +69,17 @@ class Shopware_Controllers_Frontend_Shopgate extends Enlight_Controller_Action i
         $loadedToken = $token->loadToken($tokenId, $tokenType);*/
         $path = new \ShopgateCloudApi\Components\Path();
         try {
-            $r        = new ShopgateSdk\Service\Router\Router($credentials, $token, $user, $path);
-            $response = $r->dispatch($this->getSdkRequest());
-            $this->sendResponse($response);
+            $router   = new ShopgateSdk\Service\Router\Router($credentials, $token, $user, $path);
+            $response = $router->dispatch($sdkTranslator->getRequest($this->request));
+            $shopwareTranslator->populateResponse($this->response, $response);
+            $this->response->sendResponse();
         } catch (Exception $e) {
             $this->response->renderExceptions(true);
             $this->response->setException($e)->sendResponse();
-            exit;
         }
-
         // bind "POST /carts" to "MageCreateCartHandler" handler class
         //        try {
-        //            $r->subscribe(
+        //            $router->subscribe(
         //                new ShopgateSdk\CartsRoute(),
         //                new ShopgateSdk\RequestMethodPost(),
         //                new MageCreateCartHandler(new MageRepository($mageDb, $this->sgConfig))
@@ -86,20 +89,20 @@ class Shopware_Controllers_Frontend_Shopgate extends Enlight_Controller_Action i
         //        }
 
         // This route would be something like "POST /carts/me" or "POST /carts/387"
-        // $r->subscribe(
+        // $router->subscribe(
         // 	new ShopgateSdk\CartRoute(),
         // 	new ShopgateSdk\RequestMethodPost(),
         // 	new MageSaveCartHandler(new MageRepository($mageDb, $this->sgConfig))
         // );
 
         // This route would stand for "GET /carts"
-        // $r->subscribe(
+        // $router->subscribe(
         // 	new ShopgateSdk\CartsRoute(),
         // 	new ShopgateSdk\RequestMethodGet(),
         // 	new MageGetCartHandler(new MageRepository($mageDb, $this->sgConfig))
         // );
 
-        //        $r->dispatch(
+        //        $router->dispatch(
         //            new ShopgateSdk\Request(
         //                $this->Request()->getRequestUri(),
         //                new ShopgateSdk\RequestMethod($this->Request()->getMethod()),
@@ -109,41 +112,14 @@ class Shopware_Controllers_Frontend_Shopgate extends Enlight_Controller_Action i
     }
 
     /**
-     * Translates the system's request to Shopgate SDKs
+     * Since we are in the front controller now,
+     * we need to avoid template printing and just
+     * send response immediately.
      *
-     * @return ShopgateSdk\ValueObject\Request\Request
-     * @throws Exception
+     * @todo-sg: see if switching to API controller is cleaner
      */
-    private function getSdkRequest()
+    public function postDispatch()
     {
-        $uri         = $this->request->getRequestUri();
-        $method      = $this->request->getMethod();
-        $headers     = [];
-        $headerTypes = ['Content-Type', 'Accept', 'Authorization'];
-        foreach ($headerTypes as $headerType) {
-            /** @noinspection PhpUnhandledExceptionInspection */
-            $header = $this->request->getHeader($headerType);
-            if (!empty($header)) {
-                $headers[$headerType] = $header;
-            }
-        }
-
-        return new ShopgateSdk\ValueObject\Request\Request($uri, $method, $headers, $this->request->getRawBody());
-    }
-
-    /**
-     * Translates Shopgate SDK response to the system's
-     *
-     * @param ShopgateSdk\ValueObject\Response $response
-     */
-    private function sendResponse(ShopgateSdk\ValueObject\Response $response)
-    {
-        $this->response->setBody($response->getBody());
-        foreach ($response->getHeaders() as $key => $header) {
-            $this->response->setHeader($key, $header);
-        }
-        $this->response->setHttpResponseCode($response->getCode());
-        $this->response->sendResponse();
         exit();
     }
 }

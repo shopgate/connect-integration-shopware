@@ -23,8 +23,6 @@
 namespace ShopgateCloudApi\Repositories\Sdk;
 
 use Shopgate\CloudIntegrationSdk\Repository\AbstractToken;
-use Shopgate\CloudIntegrationSdk\ValueObject\Base\BaseString;
-use Shopgate\CloudIntegrationSdk\ValueObject\ClientId;
 use Shopgate\CloudIntegrationSdk\ValueObject\TokenId;
 use Shopgate\CloudIntegrationSdk\ValueObject\TokenType\AbstractTokenType;
 use Shopgate\CloudIntegrationSdk\ValueObject\UserId;
@@ -96,29 +94,19 @@ class Token extends AbstractToken
      */
     public function loadToken(TokenId $token, AbstractTokenType $type)
     {
-        $class = $type->getValue() === AbstractTokenType::ACCESS_TOKEN ? AccessToken::class : RefreshToken::class;
-        /** @var \Shopware\Components\Model\QueryBuilder $builder */
-        $builder = $this->modelManager->createQueryBuilder();
-        $builder->select('access_token_db')
-                ->from($class, 'access_token_db')
-                ->where('access_token_db.accessToken = :accessToken')
-                ->setParameter('accessToken', $token->getValue());
+        //@todo-sg: adjust naming in Doctrine
+        $returned = $this->getTokenByParameters(['accessToken' => $token->getValue()], $type->getValue());
 
-        /** @var AccessToken $returned */
-        $returned = $builder->getQuery()->getSingleResult();
-
+        //@todo-sg: adjust naming in Doctrine
         if (!$returned->getAccessToken()) {
             return null;
         }
 
-        $tokenId  = new TokenId($returned->getAccessToken());
-        $clientId = new ClientId($returned->getClientId());
-        $userId   = new UserId($returned->getUserId());
-        /** @var \DateTime $dateTime */
-        $dateTime = $returned->getExpires();
-        $expires  = new BaseString($dateTime->format('Y-m-d H:i:s'));
+        //todo-sg: inject container class
+        /** @var \ShopgateCloudApi\Components\Translators\Sdk $sdk */
+        $sdk = Shopware()->Container()->get('shopgate_cloudapi.translator_sdk');
 
-        return new \Shopgate\CloudIntegrationSdk\ValueObject\Token($type, $tokenId, $clientId, $userId, $expires);
+        return $sdk->getToken($returned, $type);
     }
 
     /**
@@ -169,5 +157,34 @@ class Token extends AbstractToken
         $this->modelManager->persist($token);
         $this->modelManager->flush($token);
         $this->modelManager->refresh($token);
+    }
+
+    /**
+     * Provide an array of parameters for the WHERE clause
+     *
+     * @param array  $params - list of params, e.g. 'access_token' => '1235'
+     * @param string $type   - type of token, either refresh or access
+     *
+     * @return AccessToken | RefreshToken
+     * @throws \InvalidArgumentException
+     * @throws \Doctrine\ORM\NoResultException
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function getTokenByParameters(array $params = array(), $type = AbstractTokenType::ACCESS_TOKEN)
+    {
+        $class = $type === AbstractTokenType::ACCESS_TOKEN ? AccessToken::class : RefreshToken::class;
+        /** @var \Shopware\Components\Model\QueryBuilder $builder */
+        $builder = $this->modelManager->createQueryBuilder();
+        $and     = $builder->expr()->andX();
+
+        foreach ($params as $key => $value) {
+            $and->add($builder->expr()->eq('token_db.' . $key, ':' . $key));
+        }
+        $builder->select('token_db')
+                ->from($class, 'token_db')
+                ->where($and)
+                ->setParameters($params);
+
+        return $builder->getQuery()->getSingleResult();
     }
 }
