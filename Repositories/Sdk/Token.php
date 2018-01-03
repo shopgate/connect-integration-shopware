@@ -88,7 +88,7 @@ class Token extends AbstractToken
      */
     public function loadToken(ValueObject\TokenId $token, AbstractTokenType $type)
     {
-        $returned = $this->getTokenByParameters(['token' => $token->getValue()], $type->getValue());
+        $returned = $this->getTokenByParameters(['token' => (string) $token], (string) $type);
 
         return null === $returned ? null : $this->translator->getToken($returned, $type);
     }

@@ -19,5 +19,9 @@
             <argument type="service" id="loader"/>
             <tag name="shopware.event_subscriber"/>
         </service>
+        <service id="shopgate_cloudapi.request_handler_get_products" class="ShopgateCloudApi\Components\RequestHandler\GetProducts">
+            <argument type="service" id="shopgate_cloudapi.repo_sdk_token"/>
+            <argument type="service" id="models"/>
+        </service>
     </services>
 </container>
