@@ -75,7 +75,10 @@ class Shopware_Controllers_Frontend_Shopgate extends Enlight_Controller_Action i
             $this->response->sendResponse();
         } catch (Exception $e) {
             $this->response->renderExceptions(true);
-            $this->response->setHttpResponseCode($e->getCode())->setException($e)->sendResponse();
+            $this->response->setHttpResponseCode($e->getCode())
+                           ->setException($e)
+                           ->setBody($e->getMessage())
+                           ->sendResponse();
         }
         // bind "POST /carts" to "MageCreateCartHandler" handler class
         //        try {

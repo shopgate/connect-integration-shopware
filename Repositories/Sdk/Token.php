@@ -173,7 +173,9 @@ class Token extends AbstractToken
         $builder->select('token_db')
                 ->from($class, 'token_db')
                 ->where($and)
-                ->setParameters($params);
+                ->setParameters($params)
+                ->setMaxResults(1)
+                ->orderBy('token_db.expires', 'DESC');
 
         return $builder->getQuery()->getOneOrNullResult();
     }
