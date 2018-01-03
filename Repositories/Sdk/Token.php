@@ -25,27 +25,26 @@ namespace ShopgateCloudApi\Repositories\Sdk;
 use Shopgate\CloudIntegrationSdk\Repository\AbstractToken;
 use Shopgate\CloudIntegrationSdk\ValueObject;
 use Shopgate\CloudIntegrationSdk\ValueObject\TokenType\AbstractTokenType;
+use ShopgateCloudApi\Components\Translators;
 use ShopgateCloudApi\Models\Auth\AccessToken;
 use ShopgateCloudApi\Models\Auth\RefreshToken;
 use Shopware\Components\Model\ModelManager;
 
 class Token extends AbstractToken
 {
-    /** @var \ShopgateCloudApi\Components\Translators\Sdk */
+    /** @var Translators\Sdk */
     protected $translator;
     /** @var ModelManager */
     private $modelManager;
 
     /**
-     * @param ModelManager $modelManager
-     *
-     * @throws \Exception
+     * @param ModelManager    $modelManager
+     * @param Translators\Sdk $translator
      */
-    public function __construct(ModelManager $modelManager)
+    public function __construct(ModelManager $modelManager, Translators\Sdk $translator)
     {
         $this->modelManager = $modelManager;
-        //todo-sg: inject container class
-        $this->translator = Shopware()->Container()->get('shopgate_cloudapi.translator_sdk');
+        $this->translator   = $translator;
     }
 
     /**

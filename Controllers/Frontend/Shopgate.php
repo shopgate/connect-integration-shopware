@@ -68,17 +68,6 @@ class Shopware_Controllers_Frontend_Shopgate extends Enlight_Controller_Action i
     {
         $this->View()->setTemplate();
 
-        /*$tokenType = new ShopgateSdk\ValueObject\TokenType\AccessToken();
-        $tokenId   = $this->token->generateTokenId($tokenType);
-        $saveToken = new ShopgateSdk\ValueObject\Token(
-            $tokenType,
-            $tokenId,
-            $this->credentials->getClientId(),
-            new ShopgateSdk\ValueObject\UserId(111),
-            new ShopgateSdk\ValueObject\Base\BaseString(date('Y-m-d H:i:s'))
-        );
-        $this->token->saveToken($saveToken);
-        $loadedToken = $this->token->loadToken($tokenId, $tokenType);*/
         $path = new \ShopgateCloudApi\Components\Path();
         try {
             $router = new Router($this->credentials, $this->tokenRepo, $this->userRepo, $path);

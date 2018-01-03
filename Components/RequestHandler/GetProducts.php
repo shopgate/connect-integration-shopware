@@ -65,8 +65,10 @@ class GetProducts implements RequestHandlerInterface
     public function handle(Request\Request $request, $uriParams)
     {
         /** @var Article $product */
+        //todo-sg: move to a helper/translator
         $product = $this->modelManager->getRepository(Article::class)->find($uriParams['productId']);
         if (!$product) {
+            //todo-sg: customize exceptions
             throw new \Exception('Product not found');
         }
         $responseBody    = json_encode(

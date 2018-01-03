@@ -10,6 +10,7 @@
         </service>
         <service id="shopgate_cloudapi.repo_sdk_token" class="ShopgateCloudApi\Repositories\Sdk\Token">
             <argument type="service" id="models"/>
+            <argument type="service" id="shopgate_cloudapi.translator_sdk"/>
         </service>
         <service id="shopgate_cloudapi.repo_sdk_user" class="ShopgateCloudApi\Repositories\Sdk\User">
             <argument type="service" id="models"/>
