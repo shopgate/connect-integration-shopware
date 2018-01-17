@@ -26,5 +26,4 @@ use Doctrine\ORM\EntityRepository;
 
 class Client extends EntityRepository
 {
-
 }

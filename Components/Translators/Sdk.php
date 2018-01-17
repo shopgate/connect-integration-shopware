@@ -46,7 +46,7 @@ class Sdk
      */
     public function getRequest(\Enlight_Controller_Request_Request $request)
     {
-        $uri     = $request->getRequestUri();
+        $uri     = $this->parseUri($request->getRequestUri());
         $method  = $request->getMethod();
         $headers = [];
         foreach (self::$headerTypes as $headerType) {
@@ -78,5 +78,22 @@ class Sdk
         $expires  = new ValueObject\Base\BaseString($dateTime->format('Y-m-d H:i:s'));
 
         return new ValueObject\Token($type, $tokenId, $clientId, $userId, $expires);
+    }
+
+    /**
+     * Helps translate full URI's to shortened versions for SDK
+     * E.g. shopware/frontend/shopgate/v2/products/14 -> v2/products/14
+     *
+     * @param string $uri
+     *
+     * @return string
+     */
+    private function parseUri($uri)
+    {
+        if (false !== strpos($uri, 'shopgate/v2')) {
+            return substr($uri, strrpos($uri, '/v2'));
+        }
+
+        return $uri;
     }
 }

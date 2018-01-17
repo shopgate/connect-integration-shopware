@@ -94,7 +94,7 @@ class Shopware_Controllers_Frontend_Shopgate extends Enlight_Controller_Action i
     {
         try {
             $router->subscribe(
-                new ShopgateSdk\ValueObject\Route\Product(),
+                new ShopgateSdk\ValueObject\Route\V2\Product(),
                 new ShopgateSdk\ValueObject\RequestMethod\Get(),
                 $this->container->get('shopgate_cloudapi.request_handler_get_products')
             );

@@ -29,7 +29,7 @@ class ClientCredentials extends AbstractClientCredentials
 {
 
     /** @var \Shopware_Components_Config */
-    protected $config;
+    private $config;
 
     public function __construct(\Shopware_Components_Config $config)
     {
@@ -63,7 +63,6 @@ class ClientCredentials extends AbstractClientCredentials
      */
     public function getClientSecret()
     {
-        //
         $api = $this->config->getByNamespace('shopgatecloudapi', 'shopgate-cloudapi-api-key');
 
         if (!$api) {
