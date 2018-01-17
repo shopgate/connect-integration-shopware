@@ -23,6 +23,7 @@
 use Shopgate\CloudIntegrationSdk as ShopgateSdk;
 use Shopgate\CloudIntegrationSdk\Service\Router\Router;
 use Shopware\Components\CSRFWhitelistAware;
+use Symfony\Component\HttpFoundation\Response;
 
 class Shopware_Controllers_Frontend_Shopgate extends Enlight_Controller_Action implements CSRFWhitelistAware
 {
@@ -77,7 +78,7 @@ class Shopware_Controllers_Frontend_Shopgate extends Enlight_Controller_Action i
             $this->response->sendResponse();
         } catch (Exception $e) {
             $this->response->renderExceptions(true);
-            $this->response->setHttpResponseCode(500)
+            $this->response->setHttpResponseCode(Response::HTTP_INTERNAL_SERVER_ERROR)
                            ->setException($e)
                            ->setBody($e->getMessage())
                            ->sendResponse();
@@ -99,11 +100,11 @@ class Shopware_Controllers_Frontend_Shopgate extends Enlight_Controller_Action i
                 $this->container->get('shopgate_cloudapi.request_handler_get_products')
             );
         } catch (ShopgateSdk\Service\UriParser\Exception\InvalidRoute $e) {
-            $this->response->setHttpResponseCode(400)
+            $this->response->setHttpResponseCode(Response::HTTP_BAD_REQUEST)
                            ->setBody($e->getMessage())
                            ->sendResponse();
         } catch (Exception $e) {
-            $this->response->setHttpResponseCode(500)
+            $this->response->setHttpResponseCode(Response::HTTP_INTERNAL_SERVER_ERROR)
                            ->setBody($e->getMessage())
                            ->sendResponse();
         }
