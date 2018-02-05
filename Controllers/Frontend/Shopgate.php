@@ -77,11 +77,8 @@ class Shopware_Controllers_Frontend_Shopgate extends Enlight_Controller_Action i
             $this->shopwareTranslator->populateResponse($this->response, $sdkResponse);
             $this->response->sendResponse();
         } catch (Exception $e) {
-            $this->response->renderExceptions(true);
-            $this->response->setHttpResponseCode(Response::HTTP_INTERNAL_SERVER_ERROR)
-                           ->setException($e)
-                           ->setBody($e->getMessage())
-                           ->sendResponse();
+            $this->shopwareTranslator->populateException($this->response, $e);
+            $this->response->sendResponse();
         }
     }
 
@@ -104,9 +101,8 @@ class Shopware_Controllers_Frontend_Shopgate extends Enlight_Controller_Action i
                            ->setBody($e->getMessage())
                            ->sendResponse();
         } catch (Exception $e) {
-            $this->response->setHttpResponseCode(Response::HTTP_INTERNAL_SERVER_ERROR)
-                           ->setBody($e->getMessage())
-                           ->sendResponse();
+            $this->shopwareTranslator->populateException($this->response, $e);
+            $this->response->sendResponse();
         }
     }
 

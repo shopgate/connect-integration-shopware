@@ -23,6 +23,7 @@
 namespace ShopgateCloudApi\Components\Translators;
 
 use Shopgate\CloudIntegrationSdk as ShopgateSdk;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Helps translating SDK objects to Shopware
@@ -46,5 +47,34 @@ class Shopware
             $shopwareResponse->setHeader($key, $header);
         }
         $shopwareResponse->setHttpResponseCode($response->getCode());
+    }
+
+    /**
+     * Populates a Shopware response using the Exception data
+     *
+     * @todo-sg: set to produce JSON error
+     *
+     * @param \Enlight_Controller_Response_Response $shopwareResponse
+     * @param \Exception                            $e
+     */
+    public function populateException(\Enlight_Controller_Response_Response $shopwareResponse, \Exception $e)
+    {
+        $code = $this->isHttpCodeInvalid((int) $e->getCode()) ? Response::HTTP_INTERNAL_SERVER_ERROR : $e->getCode();
+        $shopwareResponse->renderExceptions(true);
+        $shopwareResponse->setHttpResponseCode($code)
+                         ->setException($e)
+                         ->setBody($e->getMessage());
+    }
+
+    /**
+     * Checks if the HTTP code is valid or not
+     *
+     * @param int $code
+     *
+     * @return bool
+     */
+    private function isHttpCodeInvalid($code)
+    {
+        return $code < 100 || $code >= 600;
     }
 }
