@@ -72,7 +72,7 @@ class Sdk
     {
         $tokenId  = new ValueObject\TokenId($token->getToken());
         $clientId = new ValueObject\ClientId($token->getClientId());
-        $userId   = new ValueObject\UserId($token->getUserId());
+        $userId   = !empty($token->getUserId()) ? new ValueObject\UserId($token->getUserId()) : null;
         /** @var \DateTime $dateTime */
         $dateTime = $token->getExpires();
         $expires  = new ValueObject\Base\BaseString($dateTime->format('Y-m-d H:i:s'));
