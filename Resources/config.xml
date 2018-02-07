@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/shopware/5.3/engine/Shopware/Components/Plugin/schema/config.xsd">
+    <elements>
+        <element type="text" scope="locale">
+            <name>shopgate-cloudapi-shop-number</name>
+            <!--<label lang="de">Dein Slogan</label>-->
+            <label lang="en">Shop Number</label>
+            <!--<description lang="de">Dieser Slogan wird in in der Storefront angezeigt</description>-->
+            <description lang="en">Shop number</description>
+        </element>
+        <element>
+            <name>shopgate-cloudapi-customer-number</name>
+            <label>Customer Number</label>
+            <description>Customer number</description>
+        </element>
+        <element>
+            <name>shopgate-cloudapi-api-key</name>
+            <label>API key</label>
+            <description>API Key</description>
+        </element>
+    </elements>
+</config>
