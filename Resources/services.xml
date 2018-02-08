@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <service id="shopgate_cloudapi.translator_sdk" class="ShopgateCloudApi\Components\Translators\Sdk"/>
+        <service id="shopgate_cloudapi.translator_shopware" class="ShopgateCloudApi\Components\Translators\Shopware"/>
+        <service id="shopgate_cloudapi.client_credentials" class="ShopgateCloudApi\Components\ClientCredentials">
+            <argument type="service" id="config"/>
+        </service>
+        <service id="shopgate_cloudapi.repo_sdk_token" class="ShopgateCloudApi\Repositories\Sdk\Token">
+            <argument type="service" id="models"/>
+            <argument type="service" id="shopgate_cloudapi.translator_sdk"/>
+        </service>
+        <service id="shopgate_cloudapi.repo_sdk_user" class="ShopgateCloudApi\Repositories\Sdk\User">
+            <argument type="service" id="models"/>
+            <argument type="service" id="PasswordEncoder"/>
+        </service>
+        <service id="shopgate_cloudapi.endpoint_subscriber" class="ShopgateCloudApi\Subscriber\EndpointSubscriber">
+            <argument type="service" id="loader"/>
+            <tag name="shopware.event_subscriber"/>
+        </service>
+        <service id="shopgate_cloudapi.request_handler_get_products" class="ShopgateCloudApi\Components\RequestHandler\GetProducts">
+            <argument type="service" id="shopgate_cloudapi.repo_sdk_token"/>
+            <argument type="service" id="models"/>
+        </service>
+    </services>
+</container>
